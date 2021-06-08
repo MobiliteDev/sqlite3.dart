@@ -156,9 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
     //await applyWorkaroundToOpenSqlCipherOnOldAndroidVersions();
     if (Platform.isAndroid) {
       open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
-    } else if (Platform.isMacOS) {
-      open.overrideFor(OperatingSystem.macOS, openCipherOnMacOS);
     }
+    /*else if (Platform.isMacOS) {
+      open.overrideFor(OperatingSystem.macOS, openCipherOnMacOS);
+    }*/
   }
 
   late sql.Database _db;
