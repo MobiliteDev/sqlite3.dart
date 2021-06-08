@@ -1,9 +1,10 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/basic.dart' hide Row;
+//import 'package:flutter_application_example/sqlite3_library_windows.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
+import 'package:sqlcipher_library_windows/sqlcipher_library_windows.dart';
 //import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
@@ -156,10 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
     //await applyWorkaroundToOpenSqlCipherOnOldAndroidVersions();
     if (Platform.isAndroid) {
       open.overrideFor(OperatingSystem.android, openCipherOnAndroid);
+    } else if (Platform.isWindows) {
+      open.overrideFor(OperatingSystem.windows, openSQLCipherOnWindows);
+      //open.overrideFor(OperatingSystem.windows, openSQLiteOnWindows);
     }
-    /*else if (Platform.isMacOS) {
-      open.overrideFor(OperatingSystem.macOS, openCipherOnMacOS);
-    }*/
   }
 
   late sql.Database _db;
