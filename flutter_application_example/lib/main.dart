@@ -148,9 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  ///Init the API
-  Future initApiForSQLite() async {}
-
   ///Init pour SQLCipher
   Future initApiForSQLiteWithSQLCipher() async {
     //Uniquement pour les appareils sous Android 6
@@ -167,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   ///Create DB
   void createDBInMemory() {
-    initApiForSQLite();
+    initApiForSQLiteWithSQLCipher();
 
     // Create a new in-memory database. To use a database backed by a file, you
     // can replace this with sqlite3.open(yourFilePath).
