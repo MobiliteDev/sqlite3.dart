@@ -176,14 +176,28 @@ class _MyHomePageState extends State<MyHomePage> {
     print(_db.userVersion);
   }
 
+  /// * Path to the directory where application can store files that are persistent, backed up, and not visible to the user, such as sqlite.db. [...]
+  Future<String> getLibraryDirectoryPath() async {
+    Directory customDir = await getLibraryDirectory();
+    String customDirPath = customDir.path;
+    return customDirPath;
+  }
+
+  Future<String> getDbPath() async {
+    String dbPath;
+    dbPath = await getLibraryDirectoryPath();
+    dbPath += "${Platform.pathSeparator}testDB.sqlite";
+
+    return dbPath;
+  }
+
+  /// CONNECT DB
   Future connectLocalDBWithSqlCipher() async {
     try {
       initApiForSQLiteWithSQLCipher();
       final String password = "test";
       //Local DB file path
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      String appDocPath = appDocDir.path;
-      String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
+      String filename = await getDbPath();
 
       _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWrite);
       if (_db.handle.address > 0) {
@@ -207,15 +221,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
       final String password = "test";
       //Local DB file path
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      String appDocPath = appDocDir.path;
-      String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
+      String filename = await getDbPath();
 
       _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWriteCreate);
       if (_db.handle.address > 0) {
+        _db.execute("PRAGMA auto_vacuum = true");
+
         print("Database created here: $filename");
         _db.execute("PRAGMA key = '$password'");
         print("Database password set: $password");
+        _db.dispose();
       }
     } on sql.SqliteException catch (ex) {
       print('''
