@@ -96,6 +96,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text("Create Local SQLCipher"),
                 onPressed: () => createLocalDBWithSqlCipher(),
               ),
+              OutlinedButton(
+                child: Text("Connect Local SQLCipherDB "),
+                onPressed: () => connectLocalDBWithSqlCipher(),
+              ),
             ],
           ),
           /*Row(
@@ -172,6 +176,22 @@ class _MyHomePageState extends State<MyHomePage> {
     print(_db.userVersion);
   }
 
+  Future connectLocalDBWithSqlCipher() async {
+    initApiForSQLiteWithSQLCipher();
+    final String password = "test";
+    //Local DB file path
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    String appDocPath = appDocDir.path;
+    String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
+
+    _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWrite);
+    if (_db.handle.address > 0) {
+      print("Database created here: $filename");
+      _db.execute("PRAGMA key = '$password'");
+      print("Database password set: $password");
+    }
+  }
+
   ///Create local DB with password 'test'
   Future createLocalDBWithSqlCipher() async {
     initApiForSQLiteWithSQLCipher();
@@ -184,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWriteCreate);
     if (_db.handle.address > 0) {
-      print("Database created here: $filename");
+      print("Database connected here: $filename");
       _db.execute("PRAGMA key = '$password'");
       print("Database password set: $password");
     }
