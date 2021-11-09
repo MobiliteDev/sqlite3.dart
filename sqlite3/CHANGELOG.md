@@ -1,3 +1,22 @@
+## 1.3.1
+
+- Fix a crash with common iOS and macOS configurations.
+  The crash has been introduced in version 1.3.0, which should be avoided.
+  Please consider adding `sqlite3: ^1.3.1` to your pubspec to avoid getting the
+  broken version
+
+## 1.3.0
+
+- Add `Cursor.tableNames` and `Row.toTableColumnMap()` to obtain tables
+  involved in a result set.
+  Thanks to [@juancastillo0](https://github.com/juancastillo0)!
+
+## 1.2.0
+
+- Add the `selectCursor` API on `PreparedStatement` to step through a result set row by row.
+- Report the causing SQL statement in exceptions
+- Use a new Dart API to determine whether symbols are available
+
 ## 1.1.2
 
 - Attempt opening sqlite3 from `DynamicLibrary.process()` on macOS

@@ -1,17 +1,19 @@
 part of 'implementation.dart';
 
 class PreparedStatementImpl implements PreparedStatement {
+  final String originalSql;
   final Pointer<sqlite3_stmt> _stmt;
   final DatabaseImpl _db;
 
   bool _closed = false;
+  _ActiveCursorIterator? _currentCursor;
 
   bool _variablesBound = false;
   final List<Pointer> _allocatedWhileBinding = [];
 
   Bindings get _bindings => _db._bindings;
 
-  PreparedStatementImpl(this._stmt, this._db);
+  PreparedStatementImpl(this.originalSql, this._stmt, this._db);
 
   @override
   int get parameterCount {
@@ -38,26 +40,45 @@ class PreparedStatementImpl implements PreparedStatement {
     } while (result == SqlError.SQLITE_ROW);
 
     if (result != SqlError.SQLITE_OK && result != SqlError.SQLITE_DONE) {
-      throwException(_db, result);
+      throwException(_db, result, originalSql);
     }
   }
 
+  List<String> get _columnNames {
+    final columnCount = _bindings.sqlite3_column_count(_stmt);
+
+    return [
+      for (var i = 0; i < columnCount; i++)
+        // name pointer doesn't need to be disposed, that happens when we
+        // finalize
+        _bindings.sqlite3_column_name(_stmt, i).readString()
+    ];
+  }
+
+  List<String?>? get _tableNames {
+    final nameFunction = _bindings.columnNameFunction;
+    if (nameFunction == null) {
+      // unsupported
+      return null;
+    }
+    final columnCount = _bindings.sqlite3_column_count(_stmt);
+    return List.generate(columnCount, (i) {
+      final pointer = nameFunction(_stmt, i);
+      return pointer.isNullPointer ? null : pointer.readString();
+    });
+  }
+
   @override
-  ResultSet select([List<Object?> parameters = const <Object>[]]) {
+  ResultSet select([List<Object?> parameters = const <Object?>[]]) {
     _ensureNotFinalized();
     _ensureMatchingParameters(parameters);
 
     _reset();
     _bindParams(parameters);
 
-    final columnCount = _bindings.sqlite3_column_count(_stmt);
-
-    final names = [
-      for (var i = 0; i < columnCount; i++)
-        // name pointer doesn't need to be disposed, that happens when we
-        // finalize
-        _bindings.sqlite3_column_name(_stmt, i).readString()
-    ];
+    final names = _columnNames;
+    final tableNames = _tableNames;
+    final columnCount = names.length;
     final rows = <List<Object?>>[];
 
     int resultCode;
@@ -67,10 +88,23 @@ class PreparedStatementImpl implements PreparedStatement {
 
     if (resultCode != SqlError.SQLITE_OK &&
         resultCode != SqlError.SQLITE_DONE) {
-      throwException(_db, resultCode);
+      throwException(_db, resultCode, originalSql);
     }
 
-    return ResultSet(names, rows);
+    return ResultSet(names, tableNames, rows);
+  }
+
+  @override
+  IteratingCursor selectCursor([List<Object?> parameters = const <Object?>[]]) {
+    _ensureNotFinalized();
+    _ensureMatchingParameters(parameters);
+
+    _reset();
+    _bindParams(parameters);
+
+    final names = _columnNames;
+    final tableNames = _tableNames;
+    return _currentCursor = _ActiveCursorIterator(this, names, tableNames);
   }
 
   @override
@@ -94,6 +128,7 @@ class PreparedStatementImpl implements PreparedStatement {
       pointer.free();
     }
     _allocatedWhileBinding.clear();
+    _currentCursor = null;
   }
 
   void _bindParams(List<Object?>? params) {
@@ -184,5 +219,45 @@ class PreparedStatementImpl implements PreparedStatement {
       throw ArgumentError.value(
           parameters, 'parameters', 'Expected $count parameters, got $length');
     }
+  }
+}
+
+class _ActiveCursorIterator extends IteratingCursor {
+  final PreparedStatementImpl statement;
+  final int columnCount;
+
+  @override
+  late Row current;
+
+  _ActiveCursorIterator(
+    this.statement,
+    List<String> columnNames,
+    List<String?>? tableNames,
+  )   : columnCount = columnNames.length,
+        super(columnNames, tableNames);
+
+  @override
+  bool moveNext() {
+    if (statement._closed || statement._currentCursor != this) return false;
+
+    final result = statement._step();
+
+    if (result == SqlError.SQLITE_ROW) {
+      final rowData = <Object?>[
+        for (var i = 0; i < columnCount; i++) statement._readValue(i)
+      ];
+
+      current = Row(this, rowData);
+      return true;
+    }
+
+    // We're at the end of the result set or encountered an exception here.
+    statement._currentCursor = null;
+
+    if (result != SqlError.SQLITE_OK && result != SqlError.SQLITE_DONE) {
+      throwException(statement._db, result, statement.originalSql);
+    }
+
+    return false;
   }
 }

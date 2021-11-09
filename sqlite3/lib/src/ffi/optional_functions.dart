@@ -31,8 +31,12 @@ typedef sqlite3_prepare_v2_dart = int Function(
     Pointer<Pointer<sqlite3_stmt>> ppStmt,
     Pointer<Pointer<char>> pzTail);
 
+typedef sqlite3_column_table_name_dart = Pointer<char> Function(
+    Pointer<sqlite3_stmt> pStmt, int N);
+
 Expando<bool> _usesV2 = Expando();
 Expando<Pointer<NativeType>> _prepareFunction = Expando();
+Expando<sqlite3_column_table_name_dart> _tableNameFunction = Expando();
 
 // sqlite3_prepare_v3 was added in 3.20.0
 const int _firstVersionForV3 = 3020000;
@@ -49,6 +53,37 @@ extension PrepareSupport on Bindings {
       _usesV2[this] = true;
       _prepareFunction[this] = library.lookup('sqlite3_prepare_v2');
     }
+
+    final knownCompileOptions =
+        library.providesSymbol('sqlite3_compileoption_get');
+    if (knownCompileOptions) {
+      final getOptions = library.lookupFunction<Pointer<Uint8> Function(Int32),
+          Pointer<Uint8> Function(int)>('sqlite3_compileoption_get');
+      final options = () sync* {
+        var i = 0;
+        String? lastOption;
+        do {
+          final ptr = getOptions(i).cast<char>();
+
+          if (!ptr.isNullPointer) {
+            lastOption = ptr.readString();
+            yield lastOption;
+          } else {
+            lastOption = null;
+          }
+
+          i++;
+        } while (lastOption != null);
+      }();
+
+      final hasTableName = options.contains('ENABLE_COLUMN_METADATA');
+
+      if (hasTableName) {
+        _tableNameFunction[this] = library.lookupFunction<
+            Pointer<char> Function(Pointer<sqlite3_stmt>, Int32),
+            sqlite3_column_table_name_dart>('sqlite3_column_table_name');
+      }
+    }
   }
 
   bool get supportsOpenV3 {
@@ -59,5 +94,10 @@ extension PrepareSupport on Bindings {
   Pointer<NativeType> get appropriateOpenFunction {
     _ensureLoaded();
     return _prepareFunction[this]!;
+  }
+
+  sqlite3_column_table_name_dart? get columnNameFunction {
+    _ensureLoaded();
+    return _tableNameFunction[this];
   }
 }
