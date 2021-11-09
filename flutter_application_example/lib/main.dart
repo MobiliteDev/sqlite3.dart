@@ -177,78 +177,118 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future connectLocalDBWithSqlCipher() async {
-    initApiForSQLiteWithSQLCipher();
-    final String password = "test";
-    //Local DB file path
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-    String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
+    try {
+      initApiForSQLiteWithSQLCipher();
+      final String password = "test";
+      //Local DB file path
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String appDocPath = appDocDir.path;
+      String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
 
-    _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWrite);
-    if (_db.handle.address > 0) {
-      print("Database created here: $filename");
-      _db.execute("PRAGMA key = '$password'");
-      print("Database password set: $password");
+      _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWrite);
+      if (_db.handle.address > 0) {
+        print("Database connected here: $filename");
+        _db.execute("PRAGMA key = '$password'");
+        print("Database password set: $password");
+      }
+    } on sql.SqliteException catch (ex) {
+      print('''
+          SQLite Error(${ex.resultCode} - ${ex.extendedResultCode})
+          ${ex.message}
+          SQL: ${ex.causingStatement}
+           ''');
     }
   }
 
   ///Create local DB with password 'test'
   Future createLocalDBWithSqlCipher() async {
-    initApiForSQLiteWithSQLCipher();
+    try {
+      initApiForSQLiteWithSQLCipher();
 
-    final String password = "test";
-    //Local DB file path
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-    String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
+      final String password = "test";
+      //Local DB file path
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String appDocPath = appDocDir.path;
+      String filename = "$appDocPath${Platform.pathSeparator}testDB.sqlite";
 
-    _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWriteCreate);
-    if (_db.handle.address > 0) {
-      print("Database connected here: $filename");
-      _db.execute("PRAGMA key = '$password'");
-      print("Database password set: $password");
+      _db = sql.sqlite3.open(filename, mode: sql.OpenMode.readWriteCreate);
+      if (_db.handle.address > 0) {
+        print("Database created here: $filename");
+        _db.execute("PRAGMA key = '$password'");
+        print("Database password set: $password");
+      }
+    } on sql.SqliteException catch (ex) {
+      print('''
+          SQLite Error(${ex.resultCode} - ${ex.extendedResultCode})
+          ${ex.message}
+          SQL: ${ex.causingStatement}
+           ''');
     }
   }
 
   ///Create Schema
   void createSchema() {
-    // Create a table and insert some data
-    _db.execute('''
+    try {
+      // Create a table and insert some data
+      _db.execute('''
     CREATE TABLE IF NOT EXISTS artists  (
       id INTEGER NOT NULL PRIMARY KEY,
       name TEXT NOT NULL
     );
   ''');
+    } on sql.SqliteException catch (ex) {
+      print('''
+          SQLite Error(${ex.resultCode} - ${ex.extendedResultCode})
+          ${ex.message}
+          SQL: ${ex.causingStatement}
+           ''');
+    }
   }
 
   ///Insérer des lignes
   void insertRows() {
-    // Prepare a statement to run it multiple times:
-    final dynamic stmt = _db.prepare('INSERT INTO artists (name) VALUES (?)');
-    stmt
-      ..execute(['The Beatles'])
-      ..execute(['Led Zeppelin'])
-      ..execute(['The Who'])
-      ..execute(['Nirvana']);
+    try {
+      // Prepare a statement to run it multiple times:
+      final dynamic stmt = _db.prepare('INSERT INTO artists (name) VALUES (?)');
+      stmt
+        ..execute(['The Beatles'])
+        ..execute(['Led Zeppelin'])
+        ..execute(['The Who'])
+        ..execute(['Nirvana']);
 
-    // Dispose a statement when you don't need it anymore to clean up resources.
-    stmt.dispose();
+      // Dispose a statement when you don't need it anymore to clean up resources.
+      stmt.dispose();
+    } on sql.SqliteException catch (ex) {
+      print('''
+          SQLite Error(${ex.resultCode} - ${ex.extendedResultCode})
+          ${ex.message}
+          SQL: ${ex.causingStatement}
+           ''');
+    }
   }
 
   ///Read rows
   void readRows() {
-    // You can run select statements with PreparedStatement.select, or directly
-    // on the database:
-    final sql.ResultSet resultSet =
-        _db.select('SELECT * FROM artists WHERE name LIKE ?', ['The %']);
+    try {
+// You can run select statements with PreparedStatement.select, or directly
+      // on the database:
+      final sql.ResultSet resultSet =
+          _db.select('SELECT * FROM artists WHERE name LIKE ?', ['The %']);
 
-    // You can iterate on the result set in multiple ways to retrieve Row objects
-    // one by one.
-    resultSet.forEach((element) {
-      print(element);
-    });
-    for (final sql.Row row in resultSet) {
-      print('Artist[id: ${row['id']}, name: ${row['name']}]');
+      // You can iterate on the result set in multiple ways to retrieve Row objects
+      // one by one.
+      resultSet.forEach((element) {
+        print(element);
+      });
+      for (final sql.Row row in resultSet) {
+        print('Artist[id: ${row['id']}, name: ${row['name']}]');
+      }
+    } on sql.SqliteException catch (ex) {
+      print('''
+          SQLite Error(${ex.resultCode} - ${ex.extendedResultCode})
+          ${ex.message}
+          SQL: ${ex.causingStatement}
+           ''');
     }
   }
 
