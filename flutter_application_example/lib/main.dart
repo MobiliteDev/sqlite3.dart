@@ -93,11 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () => createDBInMemory(),
               ),
               OutlinedButton(
-                child: Text("Create Local SQLCipher"),
+                child: Text("Create local"),
                 onPressed: () => createLocalDBWithSqlCipher(),
               ),
               OutlinedButton(
-                child: Text("Connect Local SQLCipherDB "),
+                child: Text("Connect loc."),
                 onPressed: () => connectLocalDBWithSqlCipher(),
               ),
             ],

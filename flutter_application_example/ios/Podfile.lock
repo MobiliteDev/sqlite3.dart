@@ -2,14 +2,14 @@ PODS:
   - Flutter (1.0.0)
   - path_provider (0.0.1):
     - Flutter
-  - SQLCipher (4.4.3):
-    - SQLCipher/standard (= 4.4.3)
-  - SQLCipher/common (4.4.3)
-  - SQLCipher/standard (4.4.3):
+  - SQLCipher (4.5.0):
+    - SQLCipher/standard (= 4.5.0)
+  - SQLCipher/common (4.5.0)
+  - SQLCipher/standard (4.5.0):
     - SQLCipher/common
   - sqlcipher_flutter_libs (0.0.1):
     - Flutter
-    - SQLCipher (~> 4.4.3)
+    - SQLCipher (~> 4.5.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -31,8 +31,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   path_provider: d1e9807085df1f9cc9318206cd649dc0b76be3de
-  SQLCipher: 155ffeafc9ac102e5c9b68e3e9a1297a98a27096
-  sqlcipher_flutter_libs: eae301083f1a44f7afea4c4593dd546ca6f16651
+  SQLCipher: 98dc22f27c0b1790d39e710d440f22a466ebdb59
+  sqlcipher_flutter_libs: 87686ab669dda991b2f384e4bcbb04b93e19c8fe
 
 PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
