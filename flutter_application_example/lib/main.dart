@@ -55,6 +55,8 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+String versionInfo = "";
+
 class _MyHomePageState extends State<MyHomePage> {
   void _incrementCounter() {
     setState(() {
@@ -134,12 +136,13 @@ class _MyHomePageState extends State<MyHomePage> {
               )
             ],
           ),
-          Row(
+          Column(
             children: [
               OutlinedButton(
                 child: Text("Version"),
                 onPressed: () => getVersion(),
               ),
+              Text(versionInfo),
             ],
           ),
         ],
@@ -230,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print("Database created here: $filename");
         _db.execute("PRAGMA key = '$password'");
         print("Database password set: $password");
-        _db.dispose();
+        //_db.dispose();
       }
     } on sql.SqliteException catch (ex) {
       print('''
@@ -322,9 +325,11 @@ class _MyHomePageState extends State<MyHomePage> {
   void getVersion() {
     final sql.ResultSet resultSet = _db.select("SELECT sqlite_version()");
 
+    versionInfo = "";
     // You can iterate on the result set in multiple ways to retrieve Row objects
     // one by one.
     resultSet.forEach((element) {
+      versionInfo += element.toString();
       print(element);
     });
 
@@ -333,7 +338,9 @@ class _MyHomePageState extends State<MyHomePage> {
     // You can iterate on the result set in multiple ways to retrieve Row objects
     // one by one.
     resultSet2.forEach((element) {
+      versionInfo += element.toString();
       print(element);
     });
+    setState(() {});
   }
 }
